@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="fr.gaulupeau.apps.InThePoche"
       android:versionCode="8"
-      android:versionName="@string/version" xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-sdk android:minSdkVersion="8"
-              android:targetSdkVersion="8" />
+      android:versionName="1.5.3.2" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-sdk android:minSdkVersion="11"
+              android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
 
-    <application android:icon="@drawable/icon" android:label="@string/app_name" >
+    <application android:icon="@drawable/icon"
+        		 android:label="@string/app_name"
+        		 android:theme="@style/AppTheme"
+        		 android:allowBackup="false">
         <activity android:name="fr.gaulupeau.apps.Poche.Poche"
-                  android:label="@string/app_name" android:theme="@android:style/Theme.Light.NoTitleBar">
+                  android:label="@string/app_name" android:theme="@android:style/Theme.Holo.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -21,9 +24,9 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
-        <activity android:name="fr.gaulupeau.apps.Poche.ReadArticle" android:label="@string/app_name" android:theme="@android:style/Theme.Light"></activity>
-		<activity android:name="fr.gaulupeau.apps.Poche.ListArticles" android:label="@string/app_name" android:theme="@android:style/Theme.Light"></activity>
-		<activity android:name="fr.gaulupeau.apps.Poche.Settings" android:label="@string/app_name" android:theme="@android:style/Theme.Light"></activity>
+        <activity android:name="fr.gaulupeau.apps.Poche.ReadArticle" android:label="@string/app_name" android:theme="@android:style/Theme.Holo.Light"></activity>
+		<activity android:name="fr.gaulupeau.apps.Poche.ListArticles" android:label="@string/app_name" android:theme="@android:style/Theme.Holo.Light"></activity>
+		<activity android:name="fr.gaulupeau.apps.Poche.Settings" android:label="@string/app_name" android:theme="@android:style/Theme.Holo.Light"></activity>
 		
     </application>
 </manifest>

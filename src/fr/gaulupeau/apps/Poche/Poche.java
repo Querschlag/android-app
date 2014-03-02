@@ -133,6 +133,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
 					System.out.println("base64 : " + base64);
 					System.out.println("pageurl : " + pageUrl);
 					
+					// TODO: Instead of loading the URL in the browser ask for credentials within the app and perform the request.
 					// Load the constructed URL in the browser
 					Intent i = new Intent(Intent.ACTION_VIEW);
 					i.setData(pocheSaveUrl.build());
