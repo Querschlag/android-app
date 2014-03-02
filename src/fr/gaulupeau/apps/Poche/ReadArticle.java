@@ -8,13 +8,15 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_URL;
 import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_TABLE;
 import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_AUTHOR;
 import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.MY_ID;
-
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.ClipboardManager;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -51,6 +53,7 @@ public class ReadArticle extends Activity {
 		txtTitre.setText(ac.getString(2));
 		txtContent = (TextView)findViewById(R.id.txtContent);
 		txtContent.setText(ac.getString(3));
+		registerForContextMenu(txtContent);
 		
 		txtAuthor = (TextView)findViewById(R.id.txtAuthor);
 		txtAuthor.setText(ac.getString(0));
@@ -67,6 +70,18 @@ public class ReadArticle extends Activity {
 		});
 		
 		
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+	        TextView textView = (TextView) view;
+	        menu.setHeaderTitle(textView.getText()).add(0, 0, 0, R.string.menu_copy_to_clipboard);
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+	    ((ClipboardManager) getSystemService(CLIPBOARD_SERVICE)).setText(txtContent.getText());
+	    return true;
 	}
 
 	@Override
