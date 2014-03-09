@@ -18,11 +18,14 @@
     <string name="menuWipeDb">Wipe Database</string>
     <string name="txtSyncDone">Synchronize done !</string>
     <string name="txtSyncFailed">Synchronize failed !</string>
+    <string name="txtAddPageDone">Page saved in Poche !</string>
+    <string name="txtAddPageFailed">Unable to save page in Poche !</string>
     <string name="txtNetOffline">Check Internet Connectivity !</string>
     <string name="txtConfigNotSet">Please configure the app before Syncing !</string>
-    <string name="txtGlobalToken"><b><u>API global token :</u></b></string>
-    <string name="txtAPIUsername"><b><u>Your username ID (user_id in Feed URL):</u></b></string>
-    <string name="txtAPIToken"><b><u>Your token (token in Feed URL):</u></b></string>
+    <string name="txtGlobalToken"><b>API global token :</b></string>
+    <string name="txtAPIUsername"><b>Username:</b></string>
+    <string name="txtAPIPassword"><b>Password:</b></string>
+    <string name="txtAPIToken"><b>Feed Token (Configurtaion -> Feeds):</b></string>
     <string name="version">1.5.3.2</string>
     <string name="menu_copy_to_clipboard">copy to clipboard</string>
 </resources>

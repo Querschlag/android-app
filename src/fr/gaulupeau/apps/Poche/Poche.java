@@ -19,8 +19,8 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.text.DateFormat;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -31,6 +31,20 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.BasicHttpContext;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -53,7 +67,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Browser;
 import android.text.Html;
 import android.util.Base64;
 import android.view.Menu;
@@ -86,13 +99,12 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
 	EditText editPocheUrl;
 	SharedPreferences settings;
 	static String apiUsername;
+	static String apiPassword;
 	static String apiToken;
 	static String pocheUrl;
 	String action;
-	  
-	  
-	  
-	  
+	private BasicCookieStore cookieStore;
+	private BasicHttpContext httpContext;
 	  
 	
     /** Called when the activity is first created. 
@@ -100,6 +112,9 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
      * displaying information page. */
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        this.cookieStore = new BasicCookieStore();
+        this.httpContext = new BasicHttpContext();
        
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -114,36 +129,16 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
         	findViewById(R.id.progressBar1).setVisibility(View.VISIBLE);
         	final String pageUrl = extras.getString("android.intent.extra.TEXT");
         	// Vérification de la connectivité Internet
-			 final ConnectivityManager conMgr =  (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-			 final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
-			 if (activeNetwork != null && activeNetwork.isConnected()) {
-		            // Start to build the poche URL
-					Uri.Builder pocheSaveUrl = Uri.parse(pocheUrl).buildUpon();
-					// Add the parameters from the call
-					pocheSaveUrl.appendQueryParameter("action", "add");
-					byte[] data = null;
-					try {
-						data = pageUrl.getBytes("UTF-8");
-					} catch (UnsupportedEncodingException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+			final ConnectivityManager conMgr =  (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+			final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
+			if (activeNetwork != null && activeNetwork.isConnected()) {
+				new Thread(new Runnable() {
+					public void run() {
+						performServerLogin(pocheUrl);
+						addPageToPoche(pageUrl);
 					}
-					String base64 = Base64.encodeToString(data, Base64.DEFAULT);
-					pocheSaveUrl.appendQueryParameter("url", base64);
-					System.out.println("base64 : " + base64);
-					System.out.println("pageurl : " + pageUrl);
-					
-					// TODO: Instead of loading the URL in the browser ask for credentials within the app and perform the request.
-					// Load the constructed URL in the browser
-					Intent i = new Intent(Intent.ACTION_VIEW);
-					i.setData(pocheSaveUrl.build());
-					i.putExtra(Browser.EXTRA_APPLICATION_ID, getPackageName());
-					// If user has more then one browser installed give them a chance to
-					// select which one they want to use 
-					
-					startActivity(i);
-					// That is all this app needs to do, so call finish()
-					this.finish();
+				}).start();
+				this.finish();
 			 } else {
 				 // Afficher alerte connectivité
 				 showToast(getString(R.string.txtNetOffline));
@@ -194,6 +189,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
         settings = getSharedPreferences(PREFS_NAME, 0);
         pocheUrl = settings.getString("pocheUrl", "http://");
         apiUsername = settings.getString("APIUsername", "");
+        apiPassword = settings.getString("APIPassword", "");
         apiToken = settings.getString("APIToken", "");
     }
     
@@ -230,6 +226,114 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
     		database.close();
 		}
     }
+    
+    private void performServerLogin(final String serverUrl) {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpPost loginPost = new HttpPost(serverUrl + "?login");
+		
+		try {
+		    // Add login credentials
+		    List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+		    nameValuePairs.add(new BasicNameValuePair("login", apiUsername));
+		    nameValuePairs.add(new BasicNameValuePair("password", apiPassword));
+		    loginPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+		
+		    // Execute HTTP Post Request
+		    HttpResponse response = httpclient.execute(loginPost);
+		    int statusCode = response.getStatusLine().getStatusCode();
+		    
+		    if (statusCode == HttpStatus.SC_NOT_MODIFIED ||
+		    	statusCode == HttpStatus.SC_OK) {
+		    	System.out.println("login successful");
+		    }
+		    
+		    HttpEntity entity = response.getEntity();
+		    
+		    if (entity != null) {
+		    	entity.consumeContent();
+		    }
+		    
+		    List<Cookie> cookies = httpclient.getCookieStore().getCookies();
+		    
+		    if (cookies.isEmpty()) {
+		    	System.out.println("No cookies found in response!");
+		    } else {
+		    	for (int i = 0; i < cookies.size(); i++) {
+		    		Cookie cookie = cookies.get(i);
+		    		System.out.println(cookie.getName());
+		    		if (cookie.getName().equals("PHPSESSID")) {
+		    			// save retrieved cookie
+//		    			System.out.println("Saving login cookie");
+		    			this.cookieStore.addCookie(cookie);
+		    		}
+		    		System.out.println("- " + cookies.get(i).toString());
+                }
+		    }
+		    
+		} catch (ClientProtocolException e) {
+		    httpclient.getConnectionManager().shutdown();
+		    e.printStackTrace();
+		} catch (IOException e) {
+			httpclient.getConnectionManager().shutdown();
+		    e.printStackTrace();
+		} finally {
+			httpclient.getConnectionManager().shutdown();
+		}
+    }
+    
+    private void addPageToPoche(final String pageUrl) {
+		// Start to build the poche URL
+		Uri.Builder pocheSaveUrl = Uri.parse(pocheUrl+"/").buildUpon();
+		// Add the parameters from the call
+		pocheSaveUrl.appendQueryParameter("action", "add");
+		byte[] data = null;
+		try {
+			data = pageUrl.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		String base64 = Base64.encodeToString(data, Base64.DEFAULT);
+		pocheSaveUrl.appendQueryParameter("url", base64);
+//		System.out.println("request : " + pocheSaveUrl.build().toString());
+		
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		
+		if (this.cookieStore != null && this.cookieStore.getCookies().size() > 0) {
+			System.out.println("Adding cookie to request! cookies: " + this.cookieStore.getCookies().size());
+			for (Cookie cookie : this.cookieStore.getCookies()) {
+//				System.out.println("- " + cookie.toString());
+				httpclient.getCookieStore().addCookie(cookie);
+			}
+			this.httpContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+		} else {
+			System.out.println("No cookie available to add to request!");
+		}
+		
+		HttpGet getRequest = new HttpGet(pocheSaveUrl.build().toString());
+		
+		try {
+			HttpResponse response = httpclient.execute(getRequest);
+		    int statusCode = response.getStatusLine().getStatusCode();
+		    
+		    if (statusCode == HttpStatus.SC_NOT_MODIFIED ||
+		    	statusCode == HttpStatus.SC_OK) {
+		    	showToast(getString(R.string.txtAddPageDone));
+		    } else {
+		    	showToast(getString(R.string.txtAddPageFailed));
+		    }
+		        
+		} catch (ClientProtocolException e) {
+		    httpclient.getConnectionManager().shutdown();
+		    e.printStackTrace();
+		    showToast(getString(R.string.txtAddPageFailed));
+		} catch (IOException e) {
+			httpclient.getConnectionManager().shutdown();
+		    e.printStackTrace();
+		    showToast(getString(R.string.txtAddPageFailed));
+		} finally {
+			httpclient.getConnectionManager().shutdown();
+		}
+}
     
     private void updateUnread(){
     	runOnUiThread(new Runnable() {
