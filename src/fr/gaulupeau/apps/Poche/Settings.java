@@ -16,7 +16,7 @@ public class Settings extends Activity {
 	EditText editAPIUsername;
 	EditText editAPIPassword;
 	EditText editAPIToken;
-	EditText editGlobalToken;
+	EditText editAPIUserID;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +26,7 @@ public class Settings extends Activity {
         String pocheUrl = settings.getString("pocheUrl", "http://");
         String apiUsername = settings.getString("APIUsername", "");
         String apiPassword = settings.getString("APIPassword", "");
+        String apiUserID = settings.getString("APIUserID", "");
         String apiToken = settings.getString("APIToken", "");
     	editPocheUrl = (EditText)findViewById(R.id.pocheUrl);
     	editPocheUrl.setText(pocheUrl);
@@ -33,6 +34,8 @@ public class Settings extends Activity {
     	editAPIUsername.setText(apiUsername);
     	editAPIPassword = (EditText)findViewById(R.id.APIPassword);
     	editAPIPassword.setText(apiPassword);
+    	editAPIUserID = (EditText)findViewById(R.id.APIUserID);
+    	editAPIUserID.setText( (apiUserID.length() > 0) ? apiUserID : "1");
     	editAPIToken = (EditText)findViewById(R.id.APIToken);
     	editAPIToken.setText(apiToken);
         btnDone = (Button)findViewById(R.id.btnDone);
@@ -43,10 +46,15 @@ public class Settings extends Activity {
 	        	editor.putString("pocheUrl", editPocheUrl.getText().toString());
 	        	editor.putString("APIUsername", editAPIUsername.getText().toString());
 	        	editor.putString("APIPassword", editAPIPassword.getText().toString());
+	        	editor.putString("APIUserID", editAPIUserID.getText().toString());
 	        	editor.putString("APIToken", editAPIToken.getText().toString());
 				editor.commit();
 				finish();
 			}
         });
+        
+        if (editPocheUrl.getText().length() == 0) {
+        	editPocheUrl.setFocusable(true);
+        }
 	}
 }

@@ -8,7 +8,14 @@
 
 package fr.gaulupeau.apps.Poche;
 
-import fr.gaulupeau.apps.InThePoche.R;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARCHIVE;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_CONTENT;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_SYNC;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_TABLE;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_TITLE;
+import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_URL;
+import static fr.gaulupeau.apps.Poche.Helpers.PREFS_NAME;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,6 +33,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,9 +48,14 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.scheme.SocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.w3c.dom.DOMException;
@@ -77,14 +90,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import static fr.gaulupeau.apps.Poche.Helpers.PREFS_NAME;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_TABLE;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_URL;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_TITLE;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_CONTENT;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARCHIVE;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_SYNC;
-import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
+import fr.gaulupeau.apps.InThePoche.R;
 
 
 
@@ -100,6 +106,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
 	SharedPreferences settings;
 	static String apiUsername;
 	static String apiPassword;
+	static String apiUserID;
 	static String apiToken;
 	static String pocheUrl;
 	String action;
@@ -190,6 +197,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
         pocheUrl = settings.getString("pocheUrl", "http://");
         apiUsername = settings.getString("APIUsername", "");
         apiPassword = settings.getString("APIPassword", "");
+        apiUserID = settings.getString("APIUserID", "");
         apiToken = settings.getString("APIToken", "");
     }
     
@@ -228,6 +236,13 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
     }
     
     private void performServerLogin(final String serverUrl) {
+    	if (serverUrl.startsWith("https") ) {
+    		HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+
+    		// Set verifier     
+    		HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+    	}
+    	
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		HttpPost loginPost = new HttpPost(serverUrl + "?login");
 		
@@ -237,7 +252,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
 		    nameValuePairs.add(new BasicNameValuePair("login", apiUsername));
 		    nameValuePairs.add(new BasicNameValuePair("password", apiPassword));
 		    loginPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-		
+		    
 		    // Execute HTTP Post Request
 		    HttpResponse response = httpclient.execute(loginPost);
 		    int statusCode = response.getStatusLine().getStatusCode();
@@ -264,6 +279,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
 		    		if (cookie.getName().equals("PHPSESSID")) {
 		    			// save retrieved cookie
 //		    			System.out.println("Saving login cookie");
+		    			this.cookieStore.getCookies().clear();
 		    			this.cookieStore.addCookie(cookie);
 		    		}
 		    		System.out.println("- " + cookies.get(i).toString());
@@ -297,6 +313,11 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
 //		System.out.println("request : " + pocheSaveUrl.build().toString());
 		
 		DefaultHttpClient httpclient = new DefaultHttpClient();
+		
+		if (pocheUrl.startsWith("https") ) {
+			System.out.println("Trust everyone");
+			trustEveryone();
+		}
 		
 		if (this.cookieStore != null && this.cookieStore.getCookies().size() > 0) {
 			System.out.println("Adding cookie to request! cookies: " + this.cookieStore.getCookies().size());
@@ -459,7 +480,7 @@ import static fr.gaulupeau.apps.Poche.ArticlesSQLiteOpenHelper.ARTICLE_DATE;
     	try
     	{
     		// Set the url (you will need to change this to your RSS URL
-    		url = new URL(pocheUrl + "/?feed&type=home&user_id=" + apiUsername + "&token=" + apiToken );
+    		url = new URL(pocheUrl + "/?feed&type=home&user_id=" + apiUserID + "&token=" + apiToken );
     		// Setup the connection
     		HttpsURLConnection conn_s = null;
     		HttpURLConnection conn = null;

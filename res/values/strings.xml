@@ -4,7 +4,7 @@
     <string name="app_name">In the poche</string>
     <string name="label_name">Add in the poche</string>
     <string name="author">GAULUPEAU Jonathan - 2013</string>
-    <string name="instructions">To save a web page to poche, open the page in a browser then tap <i>Share</i> and tap on <i>In the poche</i>. \nYou could then see your Poche login page. \nAnd it\'s done ! \nMore infos about poche at http://www.inthepoche.com</string>
+    <string name="instructions">To save a web page to poche, open the page in a browser then tap <i>Share</i> and tap on <i>In the poche</i>. \nAnd it\'s done ! \nMore infos about poche at \nhttp://www.inthepoche.com</string>
     <string name="btnDone">Save</string>
     <string name="which_browser">Which browser would you like to use?</string>
     <string name="authorSite">http://cv.gaulupeau.fr</string>
@@ -25,7 +25,10 @@
     <string name="txtGlobalToken"><b>API global token :</b></string>
     <string name="txtAPIUsername"><b>Username:</b></string>
     <string name="txtAPIPassword"><b>Password:</b></string>
-    <string name="txtAPIToken"><b>Feed Token (Configurtaion -> Feeds):</b></string>
+    <string name="txtRssFeed"><u>RSS Feed</u></string>
+    <string name="txtRssFeedDescription">Used to fetch pages from your poche account. Login to your poche installation and go to Configuration -> Feeds and generate your token.</string>
+    <string name="txtAPIUserID"><b>User id:</b></string>
+    <string name="txtAPIToken"><b>Token:</b></string>
     <string name="version">1.5.3.2</string>
     <string name="menu_copy_to_clipboard">copy to clipboard</string>
 </resources>

@@ -2,11 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="30sp"
-        android:paddingRight="30sp"
-        android:paddingTop="15dp"
         android:orientation="vertical" >
 
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="30sp"
+        	android:paddingRight="30sp"
+        	android:paddingTop="15dp"
+        	android:paddingBottom="15dp"
+            android:orientation="vertical" >
+            
         <TextView
             android:id="@+id/pageUrl_label"
             android:layout_width="wrap_content"
@@ -32,8 +44,6 @@
             android:linksClickable="false"
             android:maxLines="1"
             android:scrollHorizontally="false" >
-
-            <requestFocus />
         </EditText>
 
         <TextView
@@ -67,6 +77,39 @@
             android:layout_weight="1"
             android:ems="10"
             android:inputType="textWebPassword" />
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/txtRssFeed"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginBottom="5dp"
+            android:text="@string/txtRssFeedDescription" />
+        
+        <TextView
+            android:id="@+id/txtAPIUserID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/txtAPIUserID"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/APIUserID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:inputType="text" />
 
         <TextView
             android:id="@+id/txtAPIToken"
@@ -116,5 +159,7 @@
             android:layout_weight="1"
             android:text="@string/author"
             android:textSize="12sp" />
-
+            
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>
